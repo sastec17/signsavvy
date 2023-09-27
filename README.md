@@ -37,3 +37,13 @@ At this point, a QR code should pop up. Scan it with your phone.
 This should open your expo go app and you'll be able to view any changes you make! 
 
 Rememeber to make and push changes via git branch! We can merge into main via PR as we progress. 
+
+### Additional dependencies 
+Run the following in terminal:
+```
+sudo npm install  @react-navigation/native
+sudo expo install react-native-gesture-handler react-native-reanimated react-native-screens react-native-safe-area-context @react-native-community/masked-view
+sudo @react-navigation/stack
+sudo @react-navigation/bottom-tabs
+```
+Working through a nav bar tutorial rn -> These appear to be necessary :) 
