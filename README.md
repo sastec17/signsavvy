@@ -3,8 +3,9 @@ SignSavvy
 Real-Time Translation of ASL
 
 ### Startup Guide
-This is based off of [React Native's Expo Go Quickstart Tutorial](https://reactnative.dev/docs/environment-setup)
-[Somewhat outdated video reference](https://www.youtube.com/watch?v=YysKbNk1tj0&t=370s) that I used - Note that your setup will be slightly different because you'll be pulling from git 
+This is based off of [React Native's Expo Go Quickstart Tutorial](https://reactnative.dev/docs/environment-setup).
+
+Here is a [somewhat outdated video reference](https://www.youtube.com/watch?v=YysKbNk1tj0&t=370s) that I used - Note that your setup will be slightly different because you'll be pulling from git 
 
 ### Initial Bootstrapping 
 * Open Mac Terminal
@@ -13,7 +14,7 @@ This is based off of [React Native's Expo Go Quickstart Tutorial](https://reactn
 
 ### Dealing with Git
 Run ```git clone https://github.com/sastec17/signsavvy.git ``` - Make sure you accept my repo invite ahead of time!
-[More]([https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) about cloning repos if this doesn't work
+[More](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) about cloning repos if this doesn't work
 
 Open project in VSCode 
 * Add Babel Javascript Extension
