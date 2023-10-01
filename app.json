@@ -1,6 +1,14 @@
 {
   "expo": {
     "name": "test_app_1",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ]
+    ],
     "slug": "test_app_1",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,7 +23,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "signsavvy-ios"
     },
     "android": {
       "adaptiveIcon": {
