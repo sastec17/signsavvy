@@ -32,6 +32,7 @@ export default function RealTimeTranslateScreen() {
     }
 
     if (!audioPermission.granted && permission.granted) {
+        // audio permissions are not granted yet - required for recording
         return (
             <View style={styles.container}>
                 <Text style={{ textAlign: 'center' }}>We need your permission to access audio</Text>
