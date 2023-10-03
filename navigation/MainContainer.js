@@ -19,7 +19,6 @@ const Tab = createBottomTabNavigator();
 
 function MainContainer() {
   return (
-    <NavigationContainer>
       <Tab.Navigator
         initialRouteName={homeName}
         screenOptions={({ route }) => ({
@@ -42,18 +41,14 @@ function MainContainer() {
 
             return <Ionicons name={iconName} size={size} color={color} />;
           },
-          
-          
         }
         )}>
-
         <Tab.Screen name={homeName} component={HomeScreen} />
         <Tab.Screen name={translateName} component={TranslateScreen}></Tab.Screen>
         <Tab.Screen name={galleryName} component={GalleryScreen} />
         <Tab.Screen name={settingsName} component={SettingsScreen} />
 
       </Tab.Navigator>
-    </NavigationContainer>
   );
 }
 
