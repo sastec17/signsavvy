@@ -12,7 +12,7 @@ import SettingsScreen from './screens/SettingsSceen';
 //Screen names
 const homeName = "Home";
 const translateName = "Translate"
-const galleryName = "Photo Gallery";
+const galleryName = "Video Gallery";
 const settingsName = "Settings";
 
 const Tab = createBottomTabNavigator();
