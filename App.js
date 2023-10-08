@@ -12,31 +12,27 @@ function App() {
   const Stack = createNativeStackNavigator();
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName='Login'>
-        <Stack.Screen name="Login" component={LoginPage} 
+     <Stack.Navigator>
+        <Stack.Screen name="Log in" component={LoginPage}
           options= {{
+          headerStyle: {
+            backgroundColor: '#fb5b5a',
+          }
+        }}/>
+        <Stack.Screen name="CreateAccount" component={CreateAccount}
+            options= {{
             headerStyle: {
               backgroundColor: '#fb5b5a',
             }
-          }}
-        />
-        <Stack.Screen name="CreateAccount" component={CreateAccount}
+        }}/>
+        <Stack.Screen name="SignSavvy" component={MainContainer} 
             options= {{
-              headerStyle: {
-              backgroundColor: '#fb5b5a',
-            }
-          }}
-        />
-        <Stack.Screen name="SignSavvy" component={MainContainer}
-            options= {{
-              headerStyle: {
-              backgroundColor: '#fb5b5a',
-            }
-          }}
-        />
+            headerStyle: {
+            backgroundColor: '#fb5b5a',
+          }
+        }}/>
       </Stack.Navigator>
     </NavigationContainer>
-
   )
 }
 export default App;

@@ -4,7 +4,6 @@ import { Button, StyleSheet, Text, TouchableOpacity, View, SafeAreaView, TextInp
 const LoginPage = ({navigation}) => {
     const [username, updateUsername] = React.useState('');
     const [password, updatePassword] = React.useState('');
-
     const onPressLogin = () => {
         if (username == '') {alert('Enter a username')}
         else if (password == '') {alert('Enter a password')}
@@ -26,6 +25,7 @@ const LoginPage = ({navigation}) => {
             <TextInput
                 style={styles.input}
                 onChangeText={updatePassword}
+                secureTextEntry={true}
                 value={password}
                 placeholder="Password"
             ></TextInput>
