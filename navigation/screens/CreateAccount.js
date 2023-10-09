@@ -1,8 +1,5 @@
 import * as React from "react"
 import { Button, StyleSheet, Text, TouchableOpacity, View, SafeAreaView, TextInput } from 'react-native';
-import { useRef } from "react/cjs/react.production.min"
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
 
 const CreateAccount = ({navigation}) => {
     const [username, updateUsername] = React.useState('');
@@ -31,12 +28,14 @@ const CreateAccount = ({navigation}) => {
                 style={styles.input}
                 onChangeText={updatePassword}
                 value={password}
+                secureTextEntry={true}
                 placeholder="Password"
             ></TextInput>
 
             <TextInput
                 style={styles.input}
                 onChangeText={updateVerifyPassword}
+                secureTextEntry={true}
                 value={verifyPassword}
                 placeholder="Confirm Password"
             ></TextInput>
