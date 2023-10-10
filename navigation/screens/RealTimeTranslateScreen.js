@@ -1,10 +1,12 @@
 import { Camera, CameraType } from 'expo-camera';
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as MediaLibrary from 'expo-media-library';
 import { shareAsync } from 'expo-sharing';
-
+import * as Permissions from 'expo-permissions';
+import * as FileSystem from 'expo-file-system';
+import * as Location from 'expo-location';
 
 export default function RealTimeTranslateScreen() {
     // [<value>, <functionName>]
@@ -16,6 +18,7 @@ export default function RealTimeTranslateScreen() {
     const [isCapturing, setIsCapturing] = useState(false);
     const [capturedImage, setCapturedImage] = useState(null);
     const [photo, setPhoto] = useState();
+    const [video, setVideo] = useState(null);
 
 
     if (!permission) {
@@ -56,8 +59,9 @@ export default function RealTimeTranslateScreen() {
         try {
             if (cameraRef) {
                 setRecord(true);
-                let video = await cameraRef.recordAsync();
-                console.log('video', video);
+                let rec_video = await cameraRef.recordAsync();
+                console.log('video', rec_video);
+                setVideo(rec_video);
             }
         }
         catch (err) {
@@ -66,79 +70,49 @@ export default function RealTimeTranslateScreen() {
     }
 
     async function stopVideo () {
+        // stop video and save to camera roll
         try {
             if (cameraRef) {
                 await cameraRef.stopRecording();
                 console.log('end video');
                 setRecord(false);
+                if (video) {
+                    try {
+                        const mediaLibraryPermission = await MediaLibrary.requestPermissionsAsync();
+                        if (mediaLibraryPermission.status == 'granted') {
+                            await MediaLibrary.createAssetAsync(video.uri); 
+                        }
+                    }
+                    catch (error) {
+                        console.log('ERROR:', error)
+                    }
+                }
             }
         }
         catch (err) {
             console.log(err)
         }
     }
+
     async function takePicture () {
         let options = {
             quality: 1,
             base64: true,
             exif: false
         }
-        let newPhoto = await cameraRef.current.takePictureAsync(options);
+        let newPhoto = await cameraRef.takePictureAsync(options);
         setPhoto(newPhoto);
-
-        //TODO: this is a function that needs to take pictures that and send to mediaPipe player using the python code scripts
+        // save to camera roll
         if (photo) {
-            const { uri, width, height, fileSize } = photo;
-            const fileType = uri.split('.').pop(); // Extract the file extension
-
-            console.log('Captured image URI:', uri);
-            console.log('this is the image URI', photo.uri)
-            console.log('Image dimensions (width x height):', width, 'x', height);
-            console.log('File size:', fileSize, 'bytes');
-            console.log('File type:', fileType);
-            const customFilePath = `/Users/fisherwojtas/eecs495/signsavvy/scripts/pictures/my_custom_image.jpg`;
-
             try {
-                // Copy the captured image to the custom location
-                await RNFS.copyFile(photo.uri, customFilePath);
-                console.log(`Image saved to: ${customFilePath}`);
-            } catch (error) {
-                console.error('Error saving image:', error);
+                const mediaLibraryPermission = await MediaLibrary.requestPermissionsAsync();
+                if (mediaLibraryPermission.status == 'granted') {
+                    await MediaLibrary.createAssetAsync(photo.uri); 
+                }
             }
-            // Send the captured image to the Flask API
-            sendImageToAPI(photo);
-        }
-    };
-    async function sendImageToAPI (photo) {
-        try {
-            const apiURL = 'http://10.0.0.147:6000/recognize_gestures'; // Replace with your API URL
-            const formData = new FormData();
-            formData.append('image', {
-                uri: photo.uri,
-                type: 'image/jpeg',
-                name: 'image.jpg',
-            });
-            const response = await fetch(apiURL, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            if (response.ok) {
-                const responseData = await response.json();
-                // Handle the response data here
-                console.log('Gesture Result:', responseData.gesture_result);
-                console.log('Annotated Image:', responseData.annotated_image);
-
-                // Set the captured image and result in your component state
-                setCapturedImage(responseData.annotated_image);
-            } else {
-                console.error('Failed to send image to API');
+            catch (error) {
+                console.log('ERROR:', error)
             }
-        } catch (error) {
-            console.error('Error sending image to API:', error);
         }
     };
 
@@ -152,17 +126,19 @@ export default function RealTimeTranslateScreen() {
                         </TouchableOpacity>
                     ) : (
                         <>
-                            <TouchableOpacity style={styles.button} onPress={takeVideo}>
-                                <Text style={styles.text}>Start Recording</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.button} onPress={takePicture}>
-                                <Text style={styles.text}>Take Picture</Text>
-                            </TouchableOpacity>
+                        <Pressable style={styles.button} onPress={takePicture}>
+                            <Text style={styles.text}> Take Picture</Text>
+                            <Ionicons name={'camera'} color={'white'} size={26} />
+                        </Pressable>
+                        <Pressable style={styles.button} onPress={takeVideo}>
+                            <Text style={styles.text}>Record Video</Text>
+                            <Ionicons name={'videocam-outline'} color={'white'} size={26} />
+                        </Pressable>
                         </>
                     )}
                     <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
                         <Text style={styles.text}>Flip Camera</Text>
-                        <Ionicons name={'camera'} color={'white'} size={26} />
+                        <Ionicons name={'camera-reverse-outline'} color={'white'} size={26} />
                     </TouchableOpacity>
                 </View>
             </Camera>
@@ -175,24 +151,32 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        
     },
     camera: {
         flex: 1,
+        width: '100%'
     },
     buttonContainer: {
         flex: 1,
         flexDirection: 'row',
         backgroundColor: 'transparent',
-        margin: 64,
+
     },
     button: {
-        flex: 1,
-        alignSelf: 'flex-end',
         alignItems: 'center',
-    },
-    text: {
-        fontSize: 24,
+        justifyContent: 'center',
+        borderRadius: 10,
+        maxHeight: 50,
+        backgroundColor: 'black',
+        margin: 10,
+      },
+      text: {
+        fontSize: 16,
+        lineHeight: 21,
         fontWeight: 'bold',
+        letterSpacing: 0.25,
         color: 'white',
-    },
+      },
 });
