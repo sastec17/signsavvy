@@ -2,6 +2,9 @@ import { Camera, CameraType } from 'expo-camera';
 import { useState } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import * as MediaLibrary from 'expo-media-library';
+import { shareAsync } from 'expo-sharing';
+
 
 export default function RealTimeTranslateScreen() {
     // [<value>, <functionName>]
@@ -10,6 +13,10 @@ export default function RealTimeTranslateScreen() {
     const [audioPermission, requestAudioPermission] = Camera.useMicrophonePermissions();
     const [record, setRecord] = useState(false);
     const [cameraRef, setCameraRef] = useState(null);
+    const [isCapturing, setIsCapturing] = useState(false);
+    const [capturedImage, setCapturedImage] = useState(null);
+    const [photo, setPhoto] = useState();
+
 
     if (!permission) {
       // Camera permissions are still loading
@@ -70,27 +77,97 @@ export default function RealTimeTranslateScreen() {
             console.log(err)
         }
     }
+    async function takePicture () {
+        let options = {
+            quality: 1,
+            base64: true,
+            exif: false
+        }
+        let newPhoto = await cameraRef.current.takePictureAsync(options);
+        setPhoto(newPhoto);
+
+        //TODO: this is a function that needs to take pictures that and send to mediaPipe player using the python code scripts
+        if (photo) {
+            const { uri, width, height, fileSize } = photo;
+            const fileType = uri.split('.').pop(); // Extract the file extension
+
+            console.log('Captured image URI:', uri);
+            console.log('this is the image URI', photo.uri)
+            console.log('Image dimensions (width x height):', width, 'x', height);
+            console.log('File size:', fileSize, 'bytes');
+            console.log('File type:', fileType);
+            const customFilePath = `/Users/fisherwojtas/eecs495/signsavvy/scripts/pictures/my_custom_image.jpg`;
+
+            try {
+                // Copy the captured image to the custom location
+                await RNFS.copyFile(photo.uri, customFilePath);
+                console.log(`Image saved to: ${customFilePath}`);
+            } catch (error) {
+                console.error('Error saving image:', error);
+            }
+            // Send the captured image to the Flask API
+            sendImageToAPI(photo);
+        }
+    };
+    async function sendImageToAPI (photo) {
+        try {
+            const apiURL = 'http://10.0.0.147:6000/recognize_gestures'; // Replace with your API URL
+            const formData = new FormData();
+            formData.append('image', {
+                uri: photo.uri,
+                type: 'image/jpeg',
+                name: 'image.jpg',
+            });
+            const response = await fetch(apiURL, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.ok) {
+                const responseData = await response.json();
+                // Handle the response data here
+                console.log('Gesture Result:', responseData.gesture_result);
+                console.log('Annotated Image:', responseData.annotated_image);
+
+                // Set the captured image and result in your component state
+                setCapturedImage(responseData.annotated_image);
+            } else {
+                console.error('Failed to send image to API');
+            }
+        } catch (error) {
+            console.error('Error sending image to API:', error);
+        }
+    };
 
     return (
         <View style={styles.container}>
-        <Camera style={styles.camera} type={type} ref={(ref) => {setCameraRef(ref)}}>
-            <View style={styles.buttonContainer}>
-            {record? 
-                    <TouchableOpacity style={styles.button} onPress={stopVideo}> 
-                        <Text style={styles.text}>Stop Recording</Text>
-                    </TouchableOpacity> 
-                    :
-                    <TouchableOpacity style={styles.button} onPress={takeVideo}>
-                        <Text style={styles.text}>Start Recording</Text>
-                    </TouchableOpacity> 
-                }
-            <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
-                <Text style={styles.text}>Flip Camera</Text>
-                <Ionicons name={"camera"} color={'white'} size={26}  />
-            </TouchableOpacity>
-            </View>
-        </Camera>
+            <Camera style={styles.camera} type={type} ref={(ref) => setCameraRef(ref)}>
+                <View style={styles.buttonContainer}>
+                    {record ? (
+                        <TouchableOpacity style={styles.button} onPress={stopVideo}>
+                            <Text style={styles.text}>Stop Recording</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <>
+                            <TouchableOpacity style={styles.button} onPress={takeVideo}>
+                                <Text style={styles.text}>Start Recording</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.button} onPress={takePicture}>
+                                <Text style={styles.text}>Take Picture</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                    <TouchableOpacity style={styles.button} onPress={toggleCameraType}>
+                        <Text style={styles.text}>Flip Camera</Text>
+                        <Ionicons name={'camera'} color={'white'} size={26} />
+                    </TouchableOpacity>
+                </View>
+            </Camera>
         </View>
+
     );
     }
 

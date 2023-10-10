@@ -3,9 +3,13 @@ from mediapipe.framework.formats import landmark_pb2
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from flask import Flask, request, jsonify
+import base64
 import urllib
 import cv2
 import math
+
+app = Flask(__name__)
 
 
 plt.rcParams.update({
@@ -37,7 +41,7 @@ def display_one_image(image, title, subplot, titlesize=16):
     return (subplot[0], subplot[1], subplot[2]+1)
 
 
-def display_batch_of_images_with_gestures_and_hand_landmarks(images, results):
+def display_batch_of_images_with_gestures_and_hand_landmarks(images, results, file_path):
     """Displays a batch of images with the gesture category and its score along with the hand landmarks."""
     # Images and labels.
     images = [image.numpy_view() for image in images]
@@ -81,7 +85,10 @@ def display_batch_of_images_with_gestures_and_hand_landmarks(images, results):
     # Layout.
     plt.tight_layout()
     plt.subplots_adjust(wspace=SPACING, hspace=SPACING)
-    plt.show()
+    #plt.show()
+    plt.savefig(file_path, bbox_inches='tight', pad_inches=0, dpi=100)
+    plt.close()
+    return file_path
 
 
 DESIRED_HEIGHT = 480
@@ -102,8 +109,52 @@ IMAGE_FILENAMES = ['thumbs_down.jpg']
   # urllib.request.urlretrieve(url, name)
 
 
+@app.route('/recognize_gestures', methods=['POST'])
+def recognize_gestures():
+     try:
+        # STEP 1: Create GestureRecognizer and load model
+        base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
+        options = vision.GestureRecognizerOptions(base_options=base_options)
+        recognizer = vision.GestureRecognizer.create_from_options(options)
+
+        images = []
+        results = []
+
+        # Check if an image file is included in the request
+        if 'image' not in request.files:
+            return 'No image file provided', 400
+
+        image_file = request.files['image']
+
+        # Read the image from the request
+        image_data = image_file.read()
+        image = mp.Image(data=image_data)
+        #image = mp.Image.create_from_file(image_file_name)
+
+        # STEP 3: Recognize gestures in the input image.
+        recognition_result = recognizer.recognize(image)
+
+        # STEP 4: Process the result. In this case, visualize it.
+        images.append(image)
+        top_gesture = recognition_result.gestures[0][0]
+        hand_landmarks = recognition_result.hand_landmarks
+        results.append((top_gesture, hand_landmarks))
+
+        # You can return the results as JSON
+        response_data = {
+            # Images in some serialized format (e.g., base64)
+            "images": images,
+            "results": results
+        }
+        finalData = display_batch_of_images_with_gestures_and_hand_landmarks(
+            images, results)
+        return jsonify(finalData)
+     except Exception as e:
+        return str(e), 500
+
+
 # STEP 2: Create an GestureRecognizer object.
-base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
+"""base_options = python.BaseOptions(model_asset_path='gesture_recognizer.task')
 options = vision.GestureRecognizerOptions(base_options=base_options)
 recognizer = vision.GestureRecognizer.create_from_options(options)
 
@@ -122,4 +173,6 @@ for image_file_name in IMAGE_FILENAMES:
   hand_landmarks = recognition_result.hand_landmarks
   results.append((top_gesture, hand_landmarks))
   
-display_batch_of_images_with_gestures_and_hand_landmarks(images, results)
+display_batch_of_images_with_gestures_and_hand_landmarks(images, results)"""
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=6000)
