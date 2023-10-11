@@ -4,9 +4,8 @@ import { Button, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'rea
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as MediaLibrary from 'expo-media-library';
 import { shareAsync } from 'expo-sharing';
-import * as Permissions from 'expo-permissions';
-import * as FileSystem from 'expo-file-system';
-import * as Location from 'expo-location';
+import PhotoDetail from './ImageView';
+
 
 export default function RealTimeTranslateScreen() {
     // [<value>, <functionName>]
@@ -19,7 +18,6 @@ export default function RealTimeTranslateScreen() {
     const [capturedImage, setCapturedImage] = useState(null);
     const [photo, setPhoto] = useState();
     const [video, setVideo] = useState(null);
-
 
     if (!permission) {
       // Camera permissions are still loading
@@ -80,7 +78,24 @@ export default function RealTimeTranslateScreen() {
                     try {
                         const mediaLibraryPermission = await MediaLibrary.requestPermissionsAsync();
                         if (mediaLibraryPermission.status == 'granted') {
-                            await MediaLibrary.createAssetAsync(video.uri); 
+                            // get album or create album if DNE
+                            const albumName = "SignSavvy"
+                            const albums = await MediaLibrary.getAlbumsAsync();
+                            let album = albums.find((a) => a.title == albumName);
+                            if (!album) {
+                                album = await MediaLibrary.createAlbumAsync(albumName);
+                            }
+                                  // Ensure the album variable is updated
+                            album = await MediaLibrary.getAlbumsAsync();
+                            album = album.find((a) => a.title === albumName);
+        
+                            // create an asset 
+                            const asset = await MediaLibrary.createAssetAsync(video.uri);
+                            if (album && asset) {
+                                console.log(asset)
+                                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+                                console.log('here')
+                            }
                         }
                     }
                     catch (error) {
@@ -107,7 +122,27 @@ export default function RealTimeTranslateScreen() {
             try {
                 const mediaLibraryPermission = await MediaLibrary.requestPermissionsAsync();
                 if (mediaLibraryPermission.status == 'granted') {
-                    await MediaLibrary.createAssetAsync(photo.uri); 
+                    // get album or create album if DNE
+                    const albumName = "SignSavvy"
+                    const albums = await MediaLibrary.getAlbumsAsync();
+                    let album = albums.find((a) => a.title == albumName);
+                    if (!album) {
+                        album = await MediaLibrary.createAlbumAsync(albumName);
+                    }
+                          // Ensure the album variable is updated
+                    album = await MediaLibrary.getAlbumsAsync();
+                    album = album.find((a) => a.title === albumName);
+
+                    // create an asset 
+                    const asset = await MediaLibrary.createAssetAsync(photo.uri);
+                    if (album && asset) {
+                        console.log('Photo saved to camera roll')
+                        const waiting = await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+                        if (waiting) {
+                            console.log('moved to signsavvy')
+                        }
+                        console.log('here')
+                    }
                 }
             }
             catch (error) {
