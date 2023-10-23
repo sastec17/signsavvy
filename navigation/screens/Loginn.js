@@ -8,31 +8,47 @@ import {
   SafeAreaView,
   TextInput,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import Logout from "./Logout";
+//import { openDatabase } from "react-native-sqlite-storage";
+//import SQLite from "react-native-sqlite-storage";
+//import { openDatabase } from "react-native-sqlite-storage";
+import * as SQLite from "expo-sqlite";
 
-export default function LoginPage({ navigation }) {
+const db = SQLite.openDatabase(
+  { name: "myDatabase.db", location: "default" },
+  () => {
+    // Database opened successfully
+  },
+  (error) => {
+    console.error("Error opening database:", error);
+  }
+);
+
+// Later in your code, you can use the 'db' instance to perform database operations.
+
+const LoginPage = ({ navigation }) => {
+  db.transaction((tx) => {
+    tx.executeSql(
+      "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT)"
+    );
+  });
   const [username, updateUsername] = React.useState("");
   const [password, updatePassword] = React.useState("");
-  const onPressLogin = async () => {
+  const onPressLogin = () => {
     if (username == "") {
       alert("Enter a username");
     } else if (password == "") {
       alert("Enter a password");
     } else {
-      try {
-        /*var data = JSON.stringify({
-          Password: password,
-          Username: username,
-        });*/
-        await AsyncStorage.setItem("Username", username);
-        navigation.navigate("SignSavvy");
-        //alert(username);
-
-        //await AsyncStorage.setItem(username, password);
-      } catch (error) {
-        console.log(error);
-      }
+      db.transaction((tx) => {
+        tx.executeSql(
+          "SELECT * FROM users WHERE username = ? AND password = ?",
+          [username, password],
+          (_, { rows }) => {
+            const user = rows.item(0);
+            callback(user);
+          }
+        );
+      });
     }
   };
   const onPressSignUp = () => {
@@ -63,7 +79,7 @@ export default function LoginPage({ navigation }) {
       </TouchableOpacity>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -102,4 +118,4 @@ const styles = StyleSheet.create({
   },
 });
 
-//export default LoginPage;
+export default LoginPage;
