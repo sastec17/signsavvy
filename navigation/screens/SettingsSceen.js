@@ -9,6 +9,7 @@ import {
   TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Logout from "./Logout";
 
 export default function SettingsScreen({ navigation }) {
   const [newPassword, updateNewPassword] = React.useState("");
@@ -31,7 +32,18 @@ export default function SettingsScreen({ navigation }) {
       console.log(error);
     }
   };
-
+  const logout = async () => {
+    try {
+      /*var data = JSON.stringify({
+          Password: password,
+          Username: username,
+        });*/
+      await AsyncStorage.removeItem("token");
+      navigation.navigate("Log in");
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const onPressSave = () => {
     if (newPassword == "" && confirmPassword == "") {
       alert("No changes have been made.");
@@ -73,6 +85,9 @@ export default function SettingsScreen({ navigation }) {
       <TouchableOpacity onPress={onPressSave} style={styles.saveButton}>
         <Text style={styles.loginText}>SAVE CHANGES</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={logout} style={styles.logoutButton}>
+        <Text style={styles.loginText}>LOGOUT</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -111,6 +126,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#fb5b5a",
     borderRadius: 25,
     marginTop: 20,
+    marginBottom: 10,
+    height: 45,
+    justifyContent: "center",
+  },
+  logoutButton: {
+    width: "80%",
+    alignItems: "center",
+    backgroundColor: "#fb5b5a",
+    borderRadius: 25,
+    marginTop: 40,
     marginBottom: 10,
     height: 45,
     justifyContent: "center",
